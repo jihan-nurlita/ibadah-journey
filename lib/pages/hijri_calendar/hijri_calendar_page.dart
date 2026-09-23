@@ -250,10 +250,9 @@ class _HijriCalendarPageState extends State<HijriCalendarPage> {
         title: const Text(
           'Kalender Hijriah',
           style: TextStyle(
-            color: AppColors.primary,
+            color: AppColors.black,
             fontWeight: FontWeight.w800,
             fontSize: 20,
-            letterSpacing: -0.3,
           ),
         ),
         actions: [

@@ -468,6 +468,7 @@ class _ReminderPageState extends State<ReminderPage> {
           'Reminder',
           style: TextStyle(
             color: AppColors.black,
+            fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
         ),

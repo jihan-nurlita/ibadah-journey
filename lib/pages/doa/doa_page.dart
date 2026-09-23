@@ -21,8 +21,9 @@ class _DoaPageState extends State<DoaPage> {
 
   final List<String> categories = [
     "Semua",
-    "Doa-Doa",
     "Shalawat",
+    "Dzikir Pagi",
+    "Dzikir Petang",
   ];
 
   @override
@@ -31,13 +32,21 @@ class _DoaPageState extends State<DoaPage> {
     filteredDoa = doaList;
   }
 
+  // ============================================================
+  // SEARCH DOA
+  // ============================================================
+
   void searchDoa(String keyword) {
     final result = doaList.where((doa) {
-      final matchKeyword =
-          doa.judul.toLowerCase().contains(keyword.toLowerCase());
+      final matchKeyword = doa.judul.toLowerCase().contains(
+            keyword.toLowerCase(),
+          );
 
-      final matchCategory =
-          selectedCategory == "Semua" ? true : doa.kategori == selectedCategory;
+      final matchCategory = selectedCategory == "Semua"
+          ? true
+          : doa.kategori.contains(
+              selectedCategory,
+            );
 
       return matchKeyword && matchCategory;
     }).toList();
@@ -47,6 +56,10 @@ class _DoaPageState extends State<DoaPage> {
     });
   }
 
+  // ============================================================
+  // FILTER CATEGORY
+  // ============================================================
+
   void filterByCategory(String category) {
     setState(() {
       selectedCategory = category;
@@ -54,7 +67,11 @@ class _DoaPageState extends State<DoaPage> {
       if (category == "Semua") {
         filteredDoa = doaList;
       } else {
-        filteredDoa = doaList.where((e) => e.kategori == category).toList();
+        filteredDoa = doaList
+            .where(
+              (e) => e.kategori.contains(category),
+            )
+            .toList();
       }
     });
   }
@@ -85,8 +102,18 @@ class _DoaPageState extends State<DoaPage> {
             TextField(
               onChanged: searchDoa,
               decoration: InputDecoration(
-                hintText: "Cari doa...",
-                prefixIcon: const Icon(Icons.search),
+                hintText: "Cari doa & dzikir harian...",
+                prefixIcon: UnconstrainedBox(
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 16, right: 8),
+                    child: Image.asset(
+                      'assets/images/search.png',
+                      color: AppColors.primary,
+                      width: 18, // Atur ukuran ikon di sini
+                      height: 18,
+                    ),
+                  ),
+                ),
                 filled: true,
                 fillColor: Theme.of(context).cardColor,
                 border: OutlineInputBorder(

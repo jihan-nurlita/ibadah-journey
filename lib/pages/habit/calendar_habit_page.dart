@@ -4,7 +4,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ibadah_journey/core/constants/colors.dart';
-import 'package:ibadah_journey/pages/target/data/target_data.dart';
+import 'package:ibadah_journey/data/target_data.dart';
 
 class CalendarHabitPage extends StatefulWidget {
   const CalendarHabitPage({super.key});
@@ -476,7 +476,7 @@ class _CalendarHabitPageState extends State<CalendarHabitPage> {
                                 shape: BoxShape.circle,
                                 color: isSelected
                                     ? Colors.white
-                                    : AppColors.primary.withOpacity(0.4),
+                                    : AppColors.primary,
                               ),
                             ),
                           ]

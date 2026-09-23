@@ -116,7 +116,7 @@ class PrayerSchedulePage extends StatelessWidget {
         title: const Text(
           'Prayer Schedule',
           style: TextStyle(
-            color: AppColors.primary,
+            color: AppColors.black,
             fontWeight: FontWeight.bold,
             fontSize: 20,
           ),

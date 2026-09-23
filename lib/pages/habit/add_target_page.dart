@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'package:ibadah_journey/core/constants/colors.dart';
-import 'package:ibadah_journey/pages/target/data/target_data.dart';
-import 'package:ibadah_journey/pages/target/models/target_model.dart';
+import 'package:ibadah_journey/data/target_data.dart';
+import 'package:ibadah_journey/models/target_model.dart';
 
 class AddTargetPage extends StatefulWidget {
   const AddTargetPage({super.key});
@@ -548,11 +548,22 @@ class _AddTargetPageState extends State<AddTargetPage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        leading: IconButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          icon: const Icon(
+            Icons.arrow_back,
+            color: AppColors.primary,
+            size: 24,
+          ),
+        ),
         centerTitle: true,
         title: const Text(
           'Tambah Habit',
           style: TextStyle(
-            color: AppColors.primary,
+            color: AppColors.black,
+            fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
         ),

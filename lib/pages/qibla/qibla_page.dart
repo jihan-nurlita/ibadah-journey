@@ -41,20 +41,23 @@ class _QiblaPageState extends State<QiblaPage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        centerTitle: true,
         leading: IconButton(
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            Navigator.pop(context);
+          },
           icon: const Icon(
-            Icons.arrow_back_ios_new_rounded,
-            color: AppColors.black,
+            Icons.arrow_back,
+            color: AppColors.primary,
+            size: 24,
           ),
         ),
+        centerTitle: true,
         title: const Text(
           'Arah Kiblat',
           style: TextStyle(
-            color: AppColors.primary,
-            fontWeight: FontWeight.w700,
+            color: AppColors.black,
             fontSize: 20,
+            fontWeight: FontWeight.bold,
           ),
         ),
       ),
@@ -185,9 +188,9 @@ class _QiblaCompassView extends StatelessWidget {
                               width: 2,
                             ),
                           ),
-                          child: Column(
+                          child: const Column(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: const [
+                            children: [
                               Padding(
                                 padding: EdgeInsets.only(top: 18),
                                 child: Text(

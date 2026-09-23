@@ -393,7 +393,7 @@ class _DetailScreenState extends State<DetailSurahPage> {
           Text(
             ayat.idn,
             style: GoogleFonts.poppins(
-              color: const Color(0xff9A8F8F),
+              color: const Color(0xff7E8D85),
               fontWeight: FontWeight.w500,
               fontSize: 16,
             ),

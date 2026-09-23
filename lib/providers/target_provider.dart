@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../pages/target/data/target_data.dart';
+import '../data/target_data.dart';
 
 class TargetProvider extends ChangeNotifier {
   int streak = 0;

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:ibadah_journey/pages/habit/add_target_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ibadah_journey/core/constants/colors.dart';
 import 'package:ibadah_journey/pages/doa/doa_page.dart';
@@ -7,8 +8,7 @@ import 'package:ibadah_journey/pages/habit/calendar_habit_page.dart';
 import 'package:ibadah_journey/pages/home/home_page.dart';
 import 'package:ibadah_journey/pages/profile/profile_page.dart';
 import 'package:ibadah_journey/pages/quran/quran_page.dart';
-import 'package:ibadah_journey/pages/target/add_target_page.dart';
-import 'package:ibadah_journey/pages/target/data/target_data.dart';
+import 'package:ibadah_journey/data/target_data.dart';
 
 class HabitPage extends StatefulWidget {
   const HabitPage({super.key});

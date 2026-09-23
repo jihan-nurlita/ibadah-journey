@@ -27,7 +27,7 @@ class DetailPage extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           textAlign: TextAlign.center,
           style: const TextStyle(
-            fontSize: 15,
+            fontSize: 16,
             fontWeight: FontWeight.w600,
             color: AppColors.black,
           ),
@@ -132,10 +132,10 @@ class DetailPage extends StatelessWidget {
                 ),
                 child: Text(
                   doa.arti,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xff9A8F8F),
+                    color: Color(0xff7E8D85),
                     height: 1.7,
                   ),
                 ),
