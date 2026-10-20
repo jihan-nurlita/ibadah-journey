@@ -1,17 +1,16 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
-
+import 'package:flutter/foundation.dart'; // Untuk kIsWeb
 import 'package:flutter/material.dart';
 import 'package:ibadah_journey/core/constants/colors.dart';
 import 'package:ibadah_journey/core/constants/indonesia_cities.dart';
 import 'package:ibadah_journey/core/services/notification_service.dart';
-import 'package:ibadah_journey/pages/doa/doa_page.dart';
-import 'package:ibadah_journey/pages/habit/habit_page.dart';
-import 'package:ibadah_journey/pages/profile/profile_page.dart';
-import 'package:ibadah_journey/pages/quran/quran_page.dart';
-import 'package:ibadah_journey/pages/reminder/reminder_page.dart';
+import 'package:ibadah_journey/pages/navigation/custom_bottom_navbar.dart';
+import 'package:ibadah_journey/pages/notification/notification_page.dart';
 import 'package:ibadah_journey/pages/home/prayer_schedule.dart';
 import 'package:ibadah_journey/providers/prayer_provider.dart';
+import 'package:ibadah_journey/services/auth_service.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -24,16 +23,64 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   Timer? timer;
-
   String countdownText = '';
+
+  String userName = 'Memuat...';
+  String? userImage;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+
+    Future.microtask(() async {
+      await context.read<PrayerProvider>().fetchPrayerTimes();
+
+      final provider = context.read<PrayerProvider>();
+
+      if (provider.prayerData != null) {
+        final timings = provider.prayerData!['timings'] as Map<String, dynamic>;
+
+        startCountdown(timings);
+
+        await schedulePrayerNotifications(
+          timings,
+        );
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    timer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _loadUserData() async {
+    final name = await AuthService.getUserName();
+    final image = await AuthService.getUserImage();
+    if (mounted) {
+      setState(() {
+        userName = name;
+        userImage = image;
+      });
+    }
+  }
+
+  ImageProvider? _getProfileImage() {
+    if (userImage == null || userImage!.isEmpty) return null;
+    if (kIsWeb) {
+      return NetworkImage(userImage!);
+    } else {
+      return FileImage(File(userImage!));
+    }
+  }
 
   String formatTime(Duration duration) {
     String twoDigits(int n) => n.toString().padLeft(2, '0');
 
     final hours = twoDigits(duration.inHours);
-
     final minutes = twoDigits(duration.inMinutes.remainder(60));
-
     final seconds = twoDigits(duration.inSeconds.remainder(60));
 
     return '$hours:$minutes:$seconds';
@@ -57,7 +104,6 @@ class _HomePageState extends State<HomePage> {
         };
 
         DateTime? nextPrayerTime;
-
         String nextPrayerName = '';
 
         prayers.forEach((name, time) {
@@ -75,7 +121,6 @@ class _HomePageState extends State<HomePage> {
             if (nextPrayerTime == null ||
                 prayerTime.isBefore(nextPrayerTime!)) {
               nextPrayerTime = prayerTime;
-
               nextPrayerName = name;
             }
           }
@@ -85,7 +130,6 @@ class _HomePageState extends State<HomePage> {
           countdownText = 'Semua waktu sholat hari ini sudah lewat';
         } else {
           final difference = nextPrayerTime!.difference(now);
-
           countdownText = '$nextPrayerName dalam ${formatTime(difference)}';
         }
 
@@ -96,17 +140,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  @override
-  void dispose() {
-    timer?.cancel();
-
-    super.dispose();
-  }
-
-  String getCurrentPrayer(
-    Map<String, dynamic> timings,
-  ) {
-    final now = TimeOfDay.now();
+  String getCurrentPrayer(Map<String, dynamic> timings) {
+    final now = DateTime.now();
 
     final prayers = {
       'Subuh': timings['Fajr'],
@@ -121,12 +156,15 @@ class _HomePageState extends State<HomePage> {
     prayers.forEach((name, time) {
       final split = time.split(':');
 
-      final prayerTime = TimeOfDay(
-        hour: int.parse(split[0]),
-        minute: int.parse(split[1]),
+      final prayerTime = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        int.parse(split[0]),
+        int.parse(split[1]),
       );
 
-      if (now.hour >= prayerTime.hour) {
+      if (now.isAfter(prayerTime) || now.isAtSameMomentAs(prayerTime)) {
         currentPrayer = name;
       }
     });
@@ -144,31 +182,8 @@ class _HomePageState extends State<HomePage> {
     final timings = provider.prayerData!['timings'] as Map<String, dynamic>;
 
     await NotificationService.cancelAllNotifications();
-
     await schedulePrayerNotifications(timings);
-
     startCountdown(timings);
-  }
-
-  @override
-  void initState() {
-    super.initState();
-
-    Future.microtask(() async {
-      await context.read<PrayerProvider>().fetchPrayerTimes();
-
-      final provider = context.read<PrayerProvider>();
-
-      if (provider.prayerData != null) {
-        final timings = provider.prayerData!['timings'] as Map<String, dynamic>;
-
-        startCountdown(timings);
-
-        await schedulePrayerNotifications(
-          timings,
-        );
-      }
-    });
   }
 
   Future<void> schedulePrayerNotifications(
@@ -186,7 +201,6 @@ class _HomePageState extends State<HomePage> {
 
     for (final prayer in prayers.entries) {
       final split = prayer.value.split(':');
-
       final now = DateTime.now();
 
       final prayerTime = DateTime(
@@ -211,11 +225,12 @@ class _HomePageState extends State<HomePage> {
   }
 
   void showCityPicker(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final provider = context.read<PrayerProvider>();
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: isDark ? const Color(0xff1E1E1E) : Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(28),
@@ -228,13 +243,16 @@ class _HomePageState extends State<HomePage> {
             final city = indonesiaCities[index];
 
             return ListTile(
-              title: Text(city),
+              title: Text(
+                city,
+                style: TextStyle(
+                  color: isDark ? Colors.white : AppColors.black,
+                ),
+              ),
               onTap: () async {
                 Navigator.pop(context);
 
-                await provider.fetchPrayerTimesByCity(
-                  city,
-                );
+                await provider.fetchPrayerTimesByCity(city);
 
                 if (mounted) {
                   setState(() {});
@@ -249,12 +267,14 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final provider = context.watch<PrayerProvider>();
 
     if (provider.isLoading || provider.prayerData == null) {
-      return const Scaffold(
-        backgroundColor: AppColors.background,
-        body: Center(
+      return Scaffold(
+        backgroundColor:
+            isDark ? const Color(0xff121212) : AppColors.background,
+        body: const Center(
           child: CircularProgressIndicator(),
         ),
       );
@@ -269,17 +289,15 @@ class _HomePageState extends State<HomePage> {
     final activePrayer = getCurrentPrayer(timings);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-      bottomNavigationBar: const _BottomNavbar(
-        currentIndex: 0,
-      ),
+      backgroundColor: isDark ? const Color(0xff121212) : AppColors.background,
+      bottomNavigationBar: const CustomBottomNavbar(currentIndex: 0),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(18),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const _HeaderSection(),
+              _buildHeader(context),
               const SizedBox(height: 15),
               _PrayerCard(
                 prayerData: prayerData,
@@ -294,9 +312,14 @@ class _HomePageState extends State<HomePage> {
                 activePrayer: activePrayer,
                 cityName: provider.cityName,
               ),
-              const SizedBox(height: 17),
-              const _ReminderSection(),
-              const SizedBox(height: 15),
+              Text(
+                'Reminder',
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? Colors.white : AppColors.black,
+                ),
+              ),
               const _MotivationSection(),
             ],
           ),
@@ -304,55 +327,88 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-}
 
-class _HeaderSection extends StatelessWidget {
-  const _HeaderSection();
+  Widget _buildHeader(BuildContext context) {
+    final profileImage = _getProfileImage();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-  @override
-  Widget build(BuildContext context) {
     return Row(
       children: [
-        const CircleAvatar(
-          radius: 24,
-          backgroundColor: AppColors.secondary,
-          backgroundImage: AssetImage(
-            'assets/images/profile.png',
+        Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: isDark ? AppColors.secondary : AppColors.secondary,
+            border: Border.all(color: AppColors.primary, width: 2),
+            image: profileImage != null
+                ? DecorationImage(
+                    image: profileImage,
+                    fit: BoxFit.cover,
+                  )
+                : null,
           ),
+          child: profileImage == null
+              ? const Icon(
+                  Icons.person_rounded,
+                  size: 26,
+                  color: AppColors.primary,
+                )
+              : null,
         ),
         const SizedBox(width: 12),
-        const Expanded(
+        Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 'Assalamualaikum',
                 style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.black,
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : AppColors.black,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 1),
               Text(
-                'aisha noor',
+                userName,
                 style: TextStyle(
                   fontSize: 13,
-                  color: AppColors.grey,
+                  color: isDark ? Colors.white60 : AppColors.grey,
+                  fontWeight: FontWeight.w500,
                 ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
         ),
-        Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: AppColors.white,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: const Icon(
-            Icons.notifications_none_rounded,
-            color: AppColors.black,
+        GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const NotificationPage(),
+              ),
+            );
+          },
+          child: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xff1E1E1E) : AppColors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(isDark ? 0.2 : 0.03),
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Icon(
+              Icons.notifications_none_rounded,
+              color: isDark ? Colors.white : AppColors.black,
+            ),
           ),
         ),
       ],
@@ -377,19 +433,14 @@ class _PrayerCard extends StatelessWidget {
     switch (activePrayer) {
       case 'Subuh':
         return timings['Fajr'];
-
       case 'Dzuhur':
         return timings['Dhuhr'];
-
       case 'Ashar':
         return timings['Asr'];
-
       case 'Maghrib':
         return timings['Maghrib'];
-
       case 'Isya':
         return timings['Isha'];
-
       default:
         return timings['Fajr'];
     }
@@ -398,13 +449,10 @@ class _PrayerCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final gregorian = prayerData['date']['gregorian'] as Map<String, dynamic>;
-
     final hijri = prayerData['date']['hijri'] as Map<String, dynamic>;
-
     final rawDate = gregorian['date'];
 
     final parsedDate = DateFormat('dd-MM-yyyy').parse(rawDate);
-
     final readableDate = DateFormat(
       'EEEE, d MMMM yyyy',
       'id_ID',
@@ -507,6 +555,8 @@ class _PrayerScheduleSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     final prayers = [
       {
         'name': 'Imsak',
@@ -539,12 +589,12 @@ class _PrayerScheduleSection extends StatelessWidget {
       children: [
         Row(
           children: [
-            const Text(
+            Text(
               'Jadwal Sholat',
               style: TextStyle(
                 fontSize: 17,
                 fontWeight: FontWeight.w600,
-                color: AppColors.black,
+                color: isDark ? Colors.white : AppColors.black,
               ),
             ),
             const Spacer(),
@@ -563,7 +613,7 @@ class _PrayerScheduleSection extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 5),
+        const SizedBox(height: 13),
         Column(
           children: prayers.map((prayer) {
             final bool isActive = prayer['name'] == activePrayer;
@@ -577,12 +627,16 @@ class _PrayerScheduleSection extends StatelessWidget {
                 vertical: 10,
               ),
               decoration: BoxDecoration(
-                color: isActive ? AppColors.secondary : AppColors.white,
+                color: isActive
+                    ? (isDark ? const Color(0xff1E2E22) : AppColors.secondary)
+                    : (isDark ? const Color(0xff1E1E1E) : AppColors.white),
                 borderRadius: BorderRadius.circular(
                   22,
                 ),
                 border: Border.all(
-                  color: isActive ? AppColors.primary : Colors.grey.shade300,
+                  color: isActive
+                      ? AppColors.primary
+                      : (isDark ? Colors.white24 : Colors.grey.shade300),
                   width: isActive ? 2 : 1,
                 ),
               ),
@@ -604,118 +658,25 @@ class _PrayerScheduleSection extends StatelessWidget {
                   Expanded(
                     child: Text(
                       prayer['name'] as String,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.black,
+                        color: isDark ? Colors.white : AppColors.black,
                       ),
                     ),
                   ),
                   Text(
                     prayer['time'] as String,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.black,
+                      color: isDark ? Colors.white70 : AppColors.black,
                     ),
                   ),
                 ],
               ),
             );
           }).toList(),
-        ),
-      ],
-    );
-  }
-}
-
-class _ReminderSection extends StatelessWidget {
-  const _ReminderSection();
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Pengingat',
-          style: TextStyle(
-            fontSize: 17,
-            fontWeight: FontWeight.w600,
-            color: AppColors.black,
-          ),
-        ),
-        const SizedBox(height: 16),
-        InkWell(
-          borderRadius: BorderRadius.circular(24),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const ReminderPage(),
-              ),
-            );
-          },
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(
-              20,
-            ),
-            decoration: BoxDecoration(
-              color: AppColors.white,
-              borderRadius: BorderRadius.circular(
-                24,
-              ),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 58,
-                  height: 58,
-                  decoration: BoxDecoration(
-                    color: AppColors.secondary,
-                    borderRadius: BorderRadius.circular(
-                      18,
-                    ),
-                  ),
-                  child: const Icon(
-                    Icons.notifications_active_rounded,
-                    color: AppColors.primary,
-                    size: 28,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Reminder Ibadah',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.black,
-                        ),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        'Atur pengingat ibadah harianmu',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: AppColors.grey,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  size: 18,
-                  color: AppColors.grey,
-                ),
-              ],
-            ),
-          ),
         ),
       ],
     );
@@ -755,7 +716,6 @@ class _MotivationSectionState extends State<_MotivationSection> {
 
   void generateQuote() {
     final random = Random();
-
     int index = random.nextInt(quotes.length);
 
     todayQuote = quotes[index];
@@ -773,7 +733,7 @@ class _MotivationSectionState extends State<_MotivationSection> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SizedBox(height: 20),
+        const SizedBox(height: 13),
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(22),
@@ -784,7 +744,7 @@ class _MotivationSectionState extends State<_MotivationSection> {
                 Color(0xff2E7D5A),
               ],
             ),
-            borderRadius: BorderRadius.circular(30),
+            borderRadius: BorderRadius.circular(17),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -815,96 +775,6 @@ class _MotivationSectionState extends State<_MotivationSection> {
               ),
             ],
           ),
-        ),
-      ],
-    );
-  }
-}
-
-class _BottomNavbar extends StatelessWidget {
-  final int currentIndex;
-
-  const _BottomNavbar({
-    required this.currentIndex,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return BottomNavigationBar(
-      currentIndex: currentIndex,
-      onTap: (index) {
-        switch (index) {
-          case 0:
-            break;
-
-          case 1:
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const HabitPage(),
-              ),
-            );
-            break;
-
-          case 2:
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const QuranPage(),
-              ),
-            );
-            break;
-
-          case 3:
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const DoaPage(),
-              ),
-            );
-            break;
-
-          case 4:
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const ProfilePage(),
-              ),
-            );
-            break;
-        }
-      },
-      elevation: 0,
-      type: BottomNavigationBarType.fixed,
-      backgroundColor: AppColors.white,
-      selectedItemColor: AppColors.primary,
-      unselectedItemColor: AppColors.grey,
-      showSelectedLabels: false,
-      showUnselectedLabels: false,
-      items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home_rounded),
-          label: '',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.calendar_month_outlined),
-          label: '',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.menu_book),
-          label: '',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(
-            Icons.nightlight_round,
-          ),
-          label: '',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(
-            Icons.person_rounded,
-          ),
-          label: '',
         ),
       ],
     );

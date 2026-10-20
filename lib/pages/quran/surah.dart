@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:ibadah_journey/pages/quran/ayat.dart';
 
 List<Surah> surahFromJson(String str) =>

@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:ibadah_journey/core/constants/colors.dart';
-import 'package:ibadah_journey/pages/sholat/detail_sholat_page.dart';
+import 'package:ibadah_journey/pages/navigation/custom_bottom_navbar.dart';
 import 'package:ibadah_journey/pages/sholat/sholat_data.dart';
+import 'package:ibadah_journey/pages/sholat/detail_sholat_page.dart';
 
 class SholatPage extends StatefulWidget {
   const SholatPage({super.key});
 
   @override
-  State<SholatPage> createState() => _DoaPageState();
+  State<SholatPage> createState() => _SholatPageState();
 }
 
-class _DoaPageState extends State<SholatPage> {
-  List<DoaModel> filteredDoa = [];
+class _SholatPageState extends State<SholatPage> {
+  List<SholatModel> filteredDoa = [];
 
   String selectedCategory = "Semua";
 
@@ -20,7 +21,6 @@ class _DoaPageState extends State<SholatPage> {
     "Wudhu",
     "Sholat",
     "Doa-Doa",
-    "Ziarah",
   ];
 
   @override
@@ -29,13 +29,18 @@ class _DoaPageState extends State<SholatPage> {
     filteredDoa = doaList;
   }
 
+  // =====================================================
+  // SEARCH
+  // =====================================================
+
   void searchDoa(String keyword) {
     final result = doaList.where((doa) {
       final matchKeyword =
           doa.judul.toLowerCase().contains(keyword.toLowerCase());
 
-      final matchCategory =
-          selectedCategory == "Semua" ? true : doa.kategori == selectedCategory;
+      final matchCategory = selectedCategory == "Semua"
+          ? true
+          : doa.kategori.contains(selectedCategory);
 
       return matchKeyword && matchCategory;
     }).toList();
@@ -45,6 +50,10 @@ class _DoaPageState extends State<SholatPage> {
     });
   }
 
+  // =====================================================
+  // FILTER CATEGORY
+  // =====================================================
+
   void filterByCategory(String category) {
     setState(() {
       selectedCategory = category;
@@ -52,113 +61,199 @@ class _DoaPageState extends State<SholatPage> {
       if (category == "Semua") {
         filteredDoa = doaList;
       } else {
-        filteredDoa = doaList.where((e) => e.kategori == category).toList();
+        filteredDoa =
+            doaList.where((e) => e.kategori.contains(category)).toList();
       }
     });
   }
 
+  // =====================================================
+  // BUILD
+  // =====================================================
+
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      bottomNavigationBar: const CustomBottomNavbar(currentIndex: 2),
+
+      // ===================================================
+      // APP BAR
+      // ===================================================
+
       appBar: AppBar(
-        title: const Text(
-          "Doa Harian",
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        elevation: 0,
+        centerTitle: true,
+        title: Text(
+          "Panduan Ibadah",
           style: TextStyle(
-            color: AppColors.primary,
-            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : AppColors.black,
             fontSize: 20,
+            fontWeight: FontWeight.bold,
           ),
         ),
-        centerTitle: true,
+        iconTheme: const IconThemeData(
+          color: AppColors.primary,
+        ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            /// SEARCH
-            TextField(
-              onChanged: searchDoa,
-              decoration: InputDecoration(
-                hintText: "Cari doa...",
-                prefixIcon: const Icon(Icons.search),
-                filled: true,
-                fillColor: Theme.of(context).cardColor,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(18),
-                  borderSide: BorderSide.none,
-                ),
-              ),
+
+      // ===================================================
+      // BODY
+      // ===================================================
+
+      body: Column(
+        children: [
+          // =================================================
+          // SEARCH & CATEGORY
+          // =================================================
+
+          Padding(
+            padding: const EdgeInsets.only(
+              left: 24,
+              right: 24,
+              top: 20,
             ),
+            child: Column(
+              children: [
+                // ===========================================
+                // SEARCH
+                // ===========================================
 
-            const SizedBox(height: 16),
-
-            /// CATEGORY
-            SizedBox(
-              height: 40,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: categories.length,
-                itemBuilder: (context, index) {
-                  final cat = categories[index];
-                  final isActive = selectedCategory == cat;
-
-                  return GestureDetector(
-                    onTap: () => filterByCategory(cat),
-                    child: Container(
-                      margin: const EdgeInsets.only(right: 10),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color:
-                            isActive ? AppColors.primary : AppColors.secondary,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        cat,
-                        style: TextStyle(
-                          color: isActive ? Colors.white : AppColors.primary,
-                          fontWeight: FontWeight.w500,
-                        ),
+                TextField(
+                  onChanged: searchDoa,
+                  style: TextStyle(
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: "Cari panduan & doa ibadah...",
+                    hintStyle: TextStyle(
+                      color: isDark ? Colors.white54 : AppColors.grey,
+                    ),
+                    prefixIcon: const Icon(
+                      Icons.search,
+                      color: AppColors.primary,
+                    ),
+                    filled: true,
+                    fillColor: isDark ? const Color(0xff1E1E1E) : Colors.white,
+                    contentPadding: const EdgeInsets.symmetric(
+                      vertical: 18,
+                      horizontal: 14,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(18),
+                      borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(18),
+                      borderSide: const BorderSide(
+                        color: AppColors.primary,
+                        width: 1.5,
                       ),
                     ),
-                  );
-                },
-              ),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // ===========================================
+                // CATEGORY
+                // ===========================================
+
+                SizedBox(
+                  height: 40,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: categories.length,
+                    itemBuilder: (context, index) {
+                      final cat = categories[index];
+                      final isActive = selectedCategory == cat;
+
+                      return GestureDetector(
+                        onTap: () => filterByCategory(cat),
+                        child: Container(
+                          margin: const EdgeInsets.only(
+                            right: 10,
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isActive
+                                ? AppColors.primary
+                                : (isDark
+                                    ? const Color(0xff1E1E1E)
+                                    : AppColors.secondary),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            cat,
+                            style: TextStyle(
+                              color: isActive
+                                  ? Colors.white
+                                  : (isDark
+                                      ? Colors.white70
+                                      : AppColors.primary),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
+          ),
 
-            const SizedBox(height: 20),
+          const SizedBox(height: 20),
 
-            /// LIST DOA
-            Expanded(
-              child: ListView.builder(
-                itemCount: filteredDoa.length,
-                itemBuilder: (context, index) {
-                  final doa = filteredDoa[index];
+          // =================================================
+          // LIST PANDUAN
+          // =================================================
 
-                  return DoaTile(
-                    number: "${index + 1}",
-                    title: doa.judul,
-                    doa: doa,
-                  );
-                },
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.only(
+                left: 24,
+                right: 24,
+                bottom: 24,
               ),
+              itemCount: filteredDoa.length,
+              itemBuilder: (context, index) {
+                final doa = filteredDoa[index];
+
+                return SholatTile(
+                  number: "${index + 1}",
+                  title: doa.judul,
+                  doa: doa,
+                );
+              },
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class DoaTile extends StatelessWidget {
+// =====================================================
+// SHOLAT TILE
+// =====================================================
+
+// =====================================================
+// SHOLAT TILE (Disesuaikan agar sama persis dengan Doa Harian)
+// =====================================================
+
+class SholatTile extends StatelessWidget {
   final String number;
   final String title;
-  final DoaModel doa;
+  final SholatModel doa;
 
-  const DoaTile({
+  const SholatTile({
     super.key,
     required this.number,
     required this.title,
@@ -167,29 +262,45 @@ class DoaTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => DetailSholatPage(doa: doa),
+            builder: (_) => DetailSholatPage(
+              doa: doa,
+            ),
           ),
         );
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
+        margin: const EdgeInsets.only(
+          bottom: 16,
+        ),
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
+          color: isDark ? const Color(0xff1E1E1E) : Colors.white,
           borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(isDark ? 0.2 : 0.03),
+              blurRadius: 12,
+              offset: const Offset(0, 8),
+            ),
+          ],
         ),
         child: Row(
           children: [
+            // =============================================
+            // KOTAK NOMOR (Disamakan dengan Doa Harian: Background Secondary, Teks Primary)
+            // =============================================
             Container(
               width: 45,
               height: 45,
               decoration: BoxDecoration(
-                color: AppColors.secondary,
+                color: isDark ? const Color(0xff2A2A2A) : AppColors.secondary,
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Center(
@@ -202,19 +313,30 @@ class DoaTile extends StatelessWidget {
                 ),
               ),
             ),
+
             const SizedBox(width: 16),
+
+            // =============================================
+            // JUDUL
+            // =============================================
             Expanded(
               child: Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
+                  color: isDark ? Colors.white : Colors.black87,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
               ),
             ),
+
+            // =============================================
+            // ARROW (Disamakan menggunakan warna primary/hijau)
+            // =============================================
             const Icon(
               Icons.arrow_forward_ios_rounded,
               size: 18,
+              color: AppColors.primary,
             ),
           ],
         ),

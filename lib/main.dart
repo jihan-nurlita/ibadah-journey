@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:ibadah_journey/core/constants/themes.dart';
-import 'package:ibadah_journey/core/services/notification_service.dart';
 import 'package:ibadah_journey/pages/splash/splash_page.dart';
 import 'package:ibadah_journey/providers/prayer_provider.dart';
+import 'package:ibadah_journey/providers/theme_provider.dart';
+import 'package:ibadah_journey/services/notification_service.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
 import 'providers/target_provider.dart';
@@ -33,14 +34,22 @@ class IbadahJourney extends StatelessWidget {
         ChangeNotifierProvider(
           create: (_) => TargetProvider(),
         ),
+        ChangeNotifierProvider(
+          create: (_) => ThemeProvider(),
+        ),
       ],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'Ibadah Journey',
-        theme: lightTheme,
-        darkTheme: darkTheme,
-        themeMode: ThemeMode.light,
-        home: const SplashPage(),
+      // Dibungkus Consumer agar bisa mengambil nilai themeProvider.themeMode secara dinamis
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, child) {
+          return MaterialApp(
+            debugShowCheckedModeBanner: false,
+            title: 'Ibadah Journey',
+            theme: lightTheme,
+            darkTheme: darkTheme,
+            themeMode: themeProvider.themeMode, // Garis merah hilang di sini
+            home: const SplashPage(),
+          );
+        },
       ),
     );
   }

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:ibadah_journey/core/constants/colors.dart';
 import 'package:ibadah_journey/models/hijri_day_model.dart';
 import 'package:ibadah_journey/services/hijri_calendar_service.dart';
 import 'package:intl/intl.dart';
-import 'package:ibadah_journey/core/constants/colors.dart';
 
 class HijriCalendarPage extends StatefulWidget {
   final Map<String, dynamic> prayerData;
@@ -21,8 +21,12 @@ class _HijriCalendarPageState extends State<HijriCalendarPage> {
   late int _selectedDay;
 
   List<HijriDayModel> monthData = [];
-
   final HijriCalendarService service = HijriCalendarService();
+
+  // Color Palette Modern Islam
+  static const primaryGreen = Color(0xFF1E5E3A); // Hijau Tua (Tanggal Dipilih)
+  static const lightGreen = Color(0xFFE8F5E9);
+  static const accentGold = Color(0xFFD4AF37);
 
   Future<void> loadCalendar() async {
     try {
@@ -38,7 +42,6 @@ class _HijriCalendarPageState extends State<HijriCalendarPage> {
       }
 
       if (!mounted) return;
-
       setState(() {});
     } catch (e) {
       debugPrint('ERROR API => $e');
@@ -48,53 +51,23 @@ class _HijriCalendarPageState extends State<HijriCalendarPage> {
   @override
   void initState() {
     super.initState();
-
     final now = DateTime.now();
-
-    _currentMonth = DateTime(
-      now.year,
-      now.month,
-    );
-
+    _currentMonth = DateTime(now.year, now.month);
     _selectedDay = now.day;
-
     loadCalendar();
   }
 
   void _nextMonth() async {
     setState(() {
-      _currentMonth = DateTime(
-        _currentMonth.year,
-        _currentMonth.month + 1,
-      );
+      _currentMonth = DateTime(_currentMonth.year, _currentMonth.month + 1);
     });
-
     await loadCalendar();
   }
 
   void _prevMonth() async {
     setState(() {
-      _currentMonth = DateTime(
-        _currentMonth.year,
-        _currentMonth.month - 1,
-      );
+      _currentMonth = DateTime(_currentMonth.year, _currentMonth.month - 1);
     });
-
-    await loadCalendar();
-  }
-
-  void _goToToday() async {
-    final now = DateTime.now();
-
-    setState(() {
-      _currentMonth = DateTime(
-        now.year,
-        now.month,
-      );
-
-      _selectedDay = now.day;
-    });
-
     await loadCalendar();
   }
 
@@ -102,92 +75,56 @@ class _HijriCalendarPageState extends State<HijriCalendarPage> {
     return DateTime(year, month, 1).weekday % 7;
   }
 
-  String getIslamicEvent(
-    int hijriDay,
-    String hijriMonth,
-  ) {
-    /// RAMADHAN
+  String getIslamicEvent(int hijriDay, String hijriMonth) {
     if (hijriMonth == 'Ramadan') {
-      if (hijriDay == 1) {
-        return 'Awal Ramadhan';
-      }
-
-      if (hijriDay >= 21 && hijriDay <= 29) {
-        return '10 Malam Terakhir';
-      }
-
-      if (hijriDay == 27) {
-        return 'Malam Lailatul Qadar';
-      }
+      if (hijriDay == 1) return 'Awal Ramadhan';
+      if (hijriDay >= 21 && hijriDay <= 29) return '10 Malam Terakhir';
+      if (hijriDay == 27) return 'Malam Lailatul Qadar';
     }
-
-    /// SYAWAL
     if (hijriMonth == 'Shawwal') {
-      if (hijriDay == 1) {
-        return 'Idul Fitri';
-      }
-
-      if (hijriDay >= 2 && hijriDay <= 7) {
-        return 'Puasa Syawal';
-      }
+      if (hijriDay == 1) return 'Hari Raya Idul Fitri';
+      if (hijriDay >= 2 && hijriDay <= 7) return 'Puasa Sunnah Syawal';
     }
-
-    /// DZULHIJJAH
     if (hijriMonth == 'Dhul Hijjah') {
-      if (hijriDay == 9) {
-        return 'Puasa Arafah';
-      }
-
-      if (hijriDay == 10) {
-        return 'Idul Adha';
-      }
-
-      if (hijriDay >= 11 && hijriDay <= 13) {
-        return 'Hari Tasyrik';
-      }
+      if (hijriDay == 9) return 'Puasa Arafah';
+      if (hijriDay == 10) return 'Hari Raya Idul Adha';
+      if (hijriDay >= 11 && hijriDay <= 13) return 'Hari Tasyrik';
     }
-
-    /// MUHARRAM
     if (hijriMonth == 'Muharram') {
-      if (hijriDay == 1) {
-        return 'Tahun Baru Islam';
-      }
-
-      if (hijriDay == 10) {
-        return 'Puasa Asyura';
-      }
+      if (hijriDay == 1) return 'Tahun Baru Hijriah';
+      if (hijriDay == 10) return 'Puasa Asyura';
     }
-
-    /// RABIUL AWAL
-    if (hijriMonth == 'Rabi\' al-Awwal') {
-      if (hijriDay == 12) {
-        return 'Maulid Nabi';
-      }
+    if (hijriMonth == "Rabi' al-Awwal" && hijriDay == 12) {
+      return 'Maulid Nabi Muhammad SAW';
     }
-
-    /// RAJAB
-    if (hijriMonth == 'Rajab') {
-      if (hijriDay == 27) {
-        return 'Isra Mi\'raj';
-      }
+    if (hijriMonth == 'Rajab' && hijriDay == 27) {
+      return "Isra Mi'raj";
     }
-
-    /// UMUM
     if ([13, 14, 15].contains(hijriDay)) {
-      return 'Puasa Ayyamul Bidh';
+      return 'Puasa Sunnah Ayyamul Bidh';
     }
-
     return 'Tidak ada event';
   }
 
   @override
   Widget build(BuildContext context) {
-    /// LOADING
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // Warna adaptif tema
+    final bgColor = isDark ? const Color(0xFF121212) : const Color(0xFFF3F4F6);
+    final cardColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final navBoxColor =
+        isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF8FAFC);
+    final borderColor =
+        isDark ? const Color(0xFF2C2C2C) : const Color(0xFFE2E8F0);
+    final darkText = isDark ? Colors.white : const Color(0xFF1F2937);
+    final subText = isDark ? Colors.white54 : const Color(0xFF6B7280);
+
     if (monthData.isEmpty) {
-      return const Scaffold(
-        backgroundColor: AppColors.background,
-        body: Center(
-          child: CircularProgressIndicator(),
+      return Scaffold(
+        backgroundColor: bgColor,
+        body: const Center(
+          child: CircularProgressIndicator(color: primaryGreen),
         ),
       );
     }
@@ -199,106 +136,103 @@ class _HijriCalendarPageState extends State<HijriCalendarPage> {
       'EEEE, d MMMM yyyy',
       'id_ID',
     ).format(
-      DateTime(
-        _currentMonth.year,
-        _currentMonth.month,
-        _selectedDay,
-      ),
+      DateTime(_currentMonth.year, _currentMonth.month, _selectedDay),
     );
 
-    final days = List.generate(
-      monthData.length,
-      (i) => i + 1,
-    );
-
-    final firstWeekday = _getFirstWeekday(
-      _currentMonth.year,
-      _currentMonth.month,
-    );
-
-    final eventName = getIslamicEvent(
-      selectedData.hijriDay,
-      selectedData.hijriMonth,
-    );
-
+    final days = List.generate(monthData.length, (i) => i + 1);
+    final firstWeekday =
+        _getFirstWeekday(_currentMonth.year, _currentMonth.month);
+    final eventName =
+        getIslamicEvent(selectedData.hijriDay, selectedData.hijriMonth);
     final hasEvent = eventName != 'Tidak ada event';
 
     final now = DateTime.now();
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-
-      /// APP BAR
+      backgroundColor: bgColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
         leading: Padding(
-          padding: const EdgeInsets.only(left: 12),
-          child: Center(
-            child: IconButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              icon: const Icon(
-                Icons.arrow_back,
-                color: AppColors.primary,
-              ),
+          padding: const EdgeInsets.only(left: 8),
+          child: IconButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            icon: Icon(
+              Icons.arrow_back,
+              color: isDark ? Colors.white : AppColors.primary,
+              size: 22,
             ),
           ),
         ),
-        title: const Text(
+        title: Text(
           'Kalender Hijriah',
           style: TextStyle(
-            color: AppColors.black,
+            color: darkText,
             fontWeight: FontWeight.w800,
             fontSize: 20,
+            letterSpacing: -0.3,
           ),
         ),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16),
             child: Center(
-              child: Material(
-                color: AppColors.primary,
+              child: InkWell(
+                onTap: () async {
+                  final currentTime = DateTime.now();
+                  setState(() {
+                    _currentMonth =
+                        DateTime(currentTime.year, currentTime.month);
+                    _selectedDay = currentTime.day;
+                  });
+                  await loadCalendar();
+                },
                 borderRadius: BorderRadius.circular(14),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(14),
-                  onTap: _goToToday,
-                  child: const Padding(
-                    padding: EdgeInsets.all(10),
-                    child: Icon(
-                      Icons.today_rounded,
-                      color: AppColors.white,
-                      size: 20,
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [
+                        primaryGreen,
+                        AppColors.primary,
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(
+                        color: primaryGreen.withOpacity(0.3),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
+                  child: const Icon(Icons.today_rounded,
+                      color: Colors.white, size: 20),
                 ),
               ),
             ),
           ),
         ],
       ),
-
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.symmetric(
-          horizontal: 18,
-          vertical: 12,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
         child: Column(
           children: [
-            /// =========================================================
-            /// CARD KALENDER
-            /// =========================================================
+            /// KARTU UTAMA KALENDER
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: AppColors.white,
+                color: cardColor,
                 borderRadius: BorderRadius.circular(30),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.03),
+                    color: Colors.black.withOpacity(isDark ? 0.2 : 0.03),
                     blurRadius: 20,
                     spreadRadius: 1,
                     offset: const Offset(0, 8),
@@ -307,20 +241,14 @@ class _HijriCalendarPageState extends State<HijriCalendarPage> {
               ),
               child: Column(
                 children: [
-                  /// ===================================================
-                  /// NAVIGASI BULAN
-                  /// ===================================================
+                  /// NAVIGASI BULAN HEADER
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 12,
-                    ),
+                        horizontal: 14, vertical: 12),
                     decoration: BoxDecoration(
-                      color: AppColors.background,
+                      color: navBoxColor,
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: Colors.grey.shade200,
-                      ),
+                      border: Border.all(color: borderColor),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -328,38 +256,38 @@ class _HijriCalendarPageState extends State<HijriCalendarPage> {
                         _buildNavIconButton(
                           icon: Icons.chevron_left_rounded,
                           onTap: _prevMonth,
+                          isDark: isDark,
+                          darkText: darkText,
+                          borderColor: borderColor,
                         ),
-                        Expanded(
-                          child: Column(
-                            children: [
-                              Text(
-                                DateFormat(
-                                  'MMMM yyyy',
-                                  'id_ID',
-                                ).format(_currentMonth),
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.black,
-                                ),
+                        Column(
+                          children: [
+                            Text(
+                              DateFormat('MMMM yyyy', 'en_US')
+                                  .format(_currentMonth),
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: darkText,
                               ),
-                              const SizedBox(height: 3),
-                              Text(
-                                '${selectedData.hijriMonth} ${selectedData.hijriYear} H',
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  color: AppColors.primary,
-                                  fontWeight: FontWeight.w700,
-                                ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              '${selectedData.hijriMonth} ${selectedData.hijriYear} H',
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: primaryGreen,
+                                fontWeight: FontWeight.w700,
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                         _buildNavIconButton(
                           icon: Icons.chevron_right_rounded,
                           onTap: _nextMonth,
+                          isDark: isDark,
+                          darkText: darkText,
+                          borderColor: borderColor,
                         ),
                       ],
                     ),
@@ -367,27 +295,23 @@ class _HijriCalendarPageState extends State<HijriCalendarPage> {
 
                   const SizedBox(height: 20),
 
-                  /// ===================================================
-                  /// HEADER HARI
-                  /// ===================================================
+                  /// HEADER HARI (Min - Sab)
                   const Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _DayHeader('Min'),
+                      _DayHeader('Min', isWeekend: true),
                       _DayHeader('Sen'),
                       _DayHeader('Sel'),
                       _DayHeader('Rab'),
                       _DayHeader('Kam'),
-                      _DayHeader('Jum'),
+                      _DayHeader('Jum', isJumat: true),
                       _DayHeader('Sab'),
                     ],
                   ),
 
                   const SizedBox(height: 12),
 
-                  /// ===================================================
-                  /// GRID TANGGAL
-                  /// ===================================================
+                  /// GRID TANGGAL KALENDER
                   GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
@@ -400,13 +324,11 @@ class _HijriCalendarPageState extends State<HijriCalendarPage> {
                       childAspectRatio: 0.85,
                     ),
                     itemBuilder: (context, index) {
-                      /// KOSONG SEBELUM TANGGAL 1
                       if (index < firstWeekday) {
                         return const SizedBox();
                       }
 
                       final day = days[index - firstWeekday];
-
                       final isSelected = _selectedDay == day;
 
                       final isToday = now.day == day &&
@@ -414,32 +336,31 @@ class _HijriCalendarPageState extends State<HijriCalendarPage> {
                           now.year == _currentMonth.year;
 
                       Color? backgroundColor;
+                      Gradient? backgroundGradient;
+                      Color textColor = darkText;
+                      Color subTextColor = subText;
 
-                      Color textColor = AppColors.black;
-
-                      Color subTextColor = AppColors.grey;
-
-                      /// TANGGAL DIPILIH
                       if (isSelected) {
-                        backgroundColor = AppColors.primary;
-
+                        backgroundGradient = const LinearGradient(
+                          colors: [
+                            AppColors.primary,
+                            AppColors.primary,
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        );
                         textColor = Colors.white;
-
                         subTextColor = Colors.white.withOpacity(0.85);
-                      }
-
-                      /// HARI INI
-                      else if (isToday) {
-                        backgroundColor = AppColors.primary.withOpacity(0.10);
-
-                        textColor = AppColors.primary;
-
-                        subTextColor = AppColors.primary.withOpacity(0.8);
-                      }
-
-                      /// TANGGAL BIASA
-                      else {
-                        backgroundColor = AppColors.background;
+                      } else if (isToday) {
+                        backgroundColor = isDark
+                            ? const Color(0xFF1B3822)
+                            : const Color(0xFFE8F5E9);
+                        textColor = const Color(0xFF4CAF50);
+                        subTextColor = const Color(0xFF81C784);
+                      } else {
+                        backgroundColor = isDark
+                            ? const Color(0xFF252525)
+                            : const Color(0xFFFAFAFA);
                       }
 
                       return GestureDetector(
@@ -449,25 +370,24 @@ class _HijriCalendarPageState extends State<HijriCalendarPage> {
                           });
                         },
                         child: AnimatedContainer(
-                          duration: const Duration(
-                            milliseconds: 200,
-                          ),
+                          duration: const Duration(milliseconds: 200),
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
+                            gradient: backgroundGradient,
                             color: backgroundColor,
-                            border: Border.all(
-                              color: isSelected
-                                  ? AppColors.primary
-                                  : isToday
-                                      ? AppColors.primary.withOpacity(0.35)
-                                      : Colors.grey.shade200,
-                              width: isSelected || isToday ? 1.2 : 1,
-                            ),
+                            border: isSelected
+                                ? null
+                                : Border.all(
+                                    color: isToday
+                                        ? AppColors.primary.withOpacity(0.4)
+                                        : borderColor,
+                                    width: isToday ? 1.5 : 1.0,
+                                  ),
                             boxShadow: isSelected
                                 ? [
                                     BoxShadow(
                                       color:
-                                          AppColors.primary.withOpacity(0.18),
+                                          AppColors.primary.withOpacity(0.35),
                                       blurRadius: 10,
                                       offset: const Offset(0, 4),
                                     ),
@@ -477,28 +397,24 @@ class _HijriCalendarPageState extends State<HijriCalendarPage> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              /// MASEHI
                               Text(
                                 '$day',
                                 style: TextStyle(
                                   fontSize: 15,
-                                  fontWeight: isSelected || isToday
+                                  fontWeight: (isSelected || isToday)
                                       ? FontWeight.bold
                                       : FontWeight.w600,
                                   color: textColor,
                                 ),
                               ),
-
                               const SizedBox(height: 1),
-
-                              /// HIJRI
                               Text(
                                 day <= monthData.length
                                     ? '${monthData[day - 1].hijriDay}'
                                     : '',
                                 style: TextStyle(
                                   fontSize: 10,
-                                  fontWeight: isSelected || isToday
+                                  fontWeight: (isSelected || isToday)
                                       ? FontWeight.w600
                                       : FontWeight.normal,
                                   color: subTextColor,
@@ -516,19 +432,17 @@ class _HijriCalendarPageState extends State<HijriCalendarPage> {
 
             const SizedBox(height: 18),
 
-            /// =========================================================
-            /// DETAIL CARD
-            /// =========================================================
+            /// DETAIL EVENT & TANGGAL (CARD BAWAH)
             AnimatedContainer(
               duration: const Duration(milliseconds: 300),
               width: double.infinity,
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: AppColors.white,
+                color: cardColor,
                 borderRadius: BorderRadius.circular(28),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.03),
+                    color: Colors.black.withOpacity(isDark ? 0.2 : 0.03),
                     blurRadius: 20,
                     offset: const Offset(0, 6),
                   ),
@@ -537,10 +451,8 @@ class _HijriCalendarPageState extends State<HijriCalendarPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  /// ===================================================
-                  /// TANGGAL + BADGE EVENT
-                  /// ===================================================
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
@@ -548,23 +460,21 @@ class _HijriCalendarPageState extends State<HijriCalendarPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              '${selectedData.hijriDay} '
-                              '${selectedData.hijriMonth} '
-                              '${selectedData.hijriYear} H',
+                              '${selectedData.hijriDay} ${selectedData.hijriMonth} ${selectedData.hijriYear} H',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w800,
-                                color: AppColors.black,
+                                color: darkText,
                                 letterSpacing: -0.5,
                               ),
                             ),
                             const SizedBox(height: 4),
                             Text(
                               readableDate,
-                              style: const TextStyle(
-                                color: AppColors.grey,
+                              style: TextStyle(
+                                color: subText,
                                 fontSize: 13,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -576,29 +486,23 @@ class _HijriCalendarPageState extends State<HijriCalendarPage> {
                         const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 6,
-                          ),
+                              horizontal: 10, vertical: 6),
                           decoration: BoxDecoration(
-                            color: AppColors.secondary,
+                            color: accentGold.withOpacity(0.15),
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: AppColors.primary.withOpacity(0.2),
-                            ),
+                            border:
+                                Border.all(color: accentGold.withOpacity(0.4)),
                           ),
                           child: const Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(
-                                Icons.stars_rounded,
-                                color: AppColors.primary,
-                                size: 14,
-                              ),
+                              Icon(Icons.stars_rounded,
+                                  color: accentGold, size: 14),
                               SizedBox(width: 4),
                               Text(
                                 'Event Islam',
                                 style: TextStyle(
-                                  color: AppColors.primary,
+                                  color: Color(0xFFD4AF37),
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -611,45 +515,40 @@ class _HijriCalendarPageState extends State<HijriCalendarPage> {
                   ),
 
                   const SizedBox(height: 16),
-
-                  Divider(
-                    height: 1,
-                    color: Colors.grey.shade200,
-                  ),
-
+                  Divider(height: 1, color: borderColor),
                   const SizedBox(height: 16),
 
-                  /// ===================================================
-                  /// EVENT TILE
-                  /// ===================================================
+                  /// TILE CONTAINER EVENT
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: hasEvent
-                          ? AppColors.secondary.withOpacity(0.35)
-                          : AppColors.background,
+                          ? (isDark
+                              ? const Color(0xFF1B3822)
+                              : lightGreen.withOpacity(0.5))
+                          : navBoxColor,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
                         color: hasEvent
-                            ? AppColors.primary.withOpacity(0.15)
-                            : Colors.grey.shade200,
+                            ? primaryGreen.withOpacity(0.3)
+                            : borderColor,
                       ),
                     ),
                     child: Row(
                       children: [
-                        /// ICON
                         Container(
                           width: 48,
                           height: 48,
                           decoration: BoxDecoration(
-                            color:
-                                hasEvent ? AppColors.primary : AppColors.white,
+                            color: hasEvent
+                                ? primaryGreen
+                                : (isDark
+                                    ? const Color(0xFF2A2A2A)
+                                    : Colors.white),
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
-                                color: (hasEvent
-                                        ? AppColors.primary
-                                        : Colors.black)
+                                color: (hasEvent ? primaryGreen : Colors.black)
                                     .withOpacity(0.08),
                                 blurRadius: 10,
                                 offset: const Offset(0, 4),
@@ -660,25 +559,21 @@ class _HijriCalendarPageState extends State<HijriCalendarPage> {
                             hasEvent
                                 ? Icons.event_available_rounded
                                 : Icons.calendar_today_rounded,
-                            color:
-                                hasEvent ? AppColors.white : AppColors.primary,
+                            color: hasEvent ? Colors.white : primaryGreen,
                             size: 24,
                           ),
                         ),
-
                         const SizedBox(width: 14),
-
-                        /// TEXT EVENT
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 eventName,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
-                                  color: AppColors.black,
+                                  color: darkText,
                                 ),
                               ),
                               const SizedBox(height: 3),
@@ -686,8 +581,8 @@ class _HijriCalendarPageState extends State<HijriCalendarPage> {
                                 hasEvent
                                     ? 'Momen penting dalam kalender Islam'
                                     : 'Tidak ada agenda khusus hari ini',
-                                style: const TextStyle(
-                                  color: AppColors.grey,
+                                style: TextStyle(
+                                  color: subText,
                                   fontSize: 12,
                                 ),
                               ),
@@ -700,23 +595,21 @@ class _HijriCalendarPageState extends State<HijriCalendarPage> {
                 ],
               ),
             ),
-
-            const SizedBox(height: 24),
           ],
         ),
       ),
     );
   }
 
-  /// ===============================================================
-  /// BUTTON NAVIGASI BULAN
-  /// ===============================================================
   Widget _buildNavIconButton({
     required IconData icon,
     required VoidCallback onTap,
+    required bool isDark,
+    required Color darkText,
+    required Color borderColor,
   }) {
     return Material(
-      color: AppColors.white,
+      color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
@@ -726,38 +619,38 @@ class _HijriCalendarPageState extends State<HijriCalendarPage> {
           height: 36,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: Colors.grey.shade200,
-            ),
+            border: Border.all(color: borderColor),
           ),
-          child: Icon(
-            icon,
-            color: AppColors.primary,
-            size: 20,
-          ),
+          child: Icon(icon, color: darkText, size: 20),
         ),
       ),
     );
   }
 }
 
-/// ===============================================================
-/// HEADER HARI
-/// ===============================================================
 class _DayHeader extends StatelessWidget {
   final String text;
+  final bool isWeekend;
+  final bool isJumat;
 
-  const _DayHeader(this.text);
+  const _DayHeader(
+    this.text, {
+    this.isWeekend = false,
+    this.isJumat = false,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
+    const textColor = Color(0xFF94A3B8);
+
+    return SizedBox(
+      width: 36,
       child: Text(
         text,
         textAlign: TextAlign.center,
         style: const TextStyle(
           fontWeight: FontWeight.w700,
-          color: AppColors.grey,
+          color: textColor,
           fontSize: 12,
         ),
       ),

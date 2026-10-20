@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ibadah_journey/core/constants/colors.dart';
-import 'package:ibadah_journey/pages/doa/doa_page.dart';
-import 'package:ibadah_journey/pages/habit/habit_page.dart';
-import 'package:ibadah_journey/pages/home/home_page.dart';
-import 'package:ibadah_journey/pages/profile/profile_page.dart';
-
+import 'package:ibadah_journey/pages/navigation/custom_bottom_navbar.dart';
 import 'package:ibadah_journey/pages/quran/detail_surah_page.dart';
 import 'package:ibadah_journey/pages/quran/surah.dart';
 import 'package:ibadah_journey/pages/quran/tabs/bookmark_tab.dart';
@@ -19,9 +15,29 @@ class QuranPage extends StatefulWidget {
 }
 
 class _QuranPageState extends State<QuranPage> {
+  // ============================================================
+  // DATA SURAH
+  // ============================================================
+
   List<Surah> surahList = [];
 
   List<Surah> filteredSurah = [];
+
+  // ============================================================
+  // CATEGORY
+  // ============================================================
+
+  String selectedCategory = 'Surah';
+
+  final List<String> categories = [
+    'Surah',
+    'Juz',
+    'Bookmark',
+  ];
+
+  // ============================================================
+  // INIT
+  // ============================================================
 
   @override
   void initState() {
@@ -30,21 +46,42 @@ class _QuranPageState extends State<QuranPage> {
     loadSurah();
   }
 
-  void loadSurah() async {
-    final data = await QuranService.getAllSurah();
+  // ============================================================
+  // LOAD SURAH
+  // ============================================================
 
-    setState(() {
-      surahList = data;
+  Future<void> loadSurah() async {
+    try {
+      final data = await QuranService.getAllSurah();
 
-      filteredSurah = data;
-    });
+      if (!mounted) return;
+
+      setState(() {
+        surahList = data;
+        filteredSurah = data;
+      });
+    } catch (e) {
+      debugPrint('Gagal memuat daftar surah: $e');
+    }
   }
 
+  // ============================================================
+  // SEARCH SURAH
+  // ============================================================
+
   void searchSurah(String keyword) {
+    final searchKeyword = keyword.trim().toLowerCase();
+
+    if (searchKeyword.isEmpty) {
+      setState(() {
+        filteredSurah = surahList;
+      });
+
+      return;
+    }
+
     final results = surahList.where((surah) {
-      return surah.namaLatin.toLowerCase().contains(
-            keyword.toLowerCase(),
-          );
+      return surah.namaLatin.toLowerCase().contains(searchKeyword);
     }).toList();
 
     setState(() {
@@ -52,69 +89,106 @@ class _QuranPageState extends State<QuranPage> {
     });
   }
 
-  // CATEGORY
-  String selectedCategory = "Surah";
+  // ============================================================
+  // CHANGE CATEGORY
+  // ============================================================
 
-  final List<String> categories = [
-    "Surah",
-    "Juz",
-    "Bookmark",
-  ];
+  void changeCategory(String category) {
+    setState(() {
+      selectedCategory = category;
+    });
+  }
+
+  // ============================================================
+  // BUILD
+  // ============================================================
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // ============================================================
+    // LOADING
+    // ============================================================
+
     if (surahList.isEmpty) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
+      return Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        body: const Center(
+          child: CircularProgressIndicator(
+            color: AppColors.primary,
+          ),
         ),
       );
     }
 
     return Scaffold(
-      bottomNavigationBar: const _BottomNavbar(currentIndex: 2),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      bottomNavigationBar: const CustomBottomNavbar(currentIndex: 1),
       appBar: AppBar(
-        title: const Text(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        elevation: 0,
+        centerTitle: true,
+        title: Text(
           "Al-Qur'an",
           style: TextStyle(
-            color: AppColors.black,
-            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : AppColors.black,
             fontSize: 20,
+            fontWeight: FontWeight.bold,
           ),
+        ),
+        iconTheme: const IconThemeData(
+          color: AppColors.primary,
         ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
-            /// SEARCH
+            // ======================================================
+            // SEARCH
+            // ======================================================
+
             TextField(
               onChanged: searchSurah,
+              style: TextStyle(
+                color: isDark ? Colors.white : Colors.black87,
+              ),
               decoration: InputDecoration(
-                hintText: "Cari Surah",
-                prefixIcon: UnconstrainedBox(
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 16, right: 8),
-                    child: Image.asset(
-                      'assets/images/search.png',
-                      color: AppColors.primary,
-                      width: 18, // Atur ukuran ikon di sini
-                      height: 18,
-                    ),
-                  ),
+                hintText: 'Cari Surah',
+                hintStyle: TextStyle(
+                  color: isDark ? Colors.white54 : Colors.black38,
+                ),
+                prefixIcon: const Icon(
+                  Icons.search,
+                  color: AppColors.primary,
                 ),
                 filled: true,
-                fillColor: Theme.of(context).cardColor,
+                fillColor: isDark ? const Color(0xff1E1E1E) : Colors.white,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(18),
                   borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(18),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(18),
+                  borderSide: const BorderSide(
+                    color: AppColors.primary,
+                    width: 1.2,
+                  ),
                 ),
               ),
             ),
 
             const SizedBox(height: 24),
 
-            /// CATEGORY
+            // ======================================================
+            // CATEGORY
+            // ======================================================
+
             SizedBox(
               height: 40,
               child: ListView.builder(
@@ -123,16 +197,18 @@ class _QuranPageState extends State<QuranPage> {
                 itemBuilder: (context, index) {
                   final category = categories[index];
 
-                  final isSelected = selectedCategory == category;
+                  final bool isSelected = selectedCategory == category;
 
                   return GestureDetector(
                     onTap: () {
-                      setState(() {
-                        selectedCategory = category;
-                      });
+                      changeCategory(
+                        category,
+                      );
                     },
                     child: Container(
-                      margin: const EdgeInsets.only(right: 10),
+                      margin: const EdgeInsets.only(
+                        right: 10,
+                      ),
                       padding: const EdgeInsets.symmetric(
                         horizontal: 18,
                         vertical: 8,
@@ -140,13 +216,19 @@ class _QuranPageState extends State<QuranPage> {
                       decoration: BoxDecoration(
                         color: isSelected
                             ? AppColors.primary
-                            : AppColors.secondary,
-                        borderRadius: BorderRadius.circular(12),
+                            : (isDark
+                                ? const Color(0xff2A2A2A)
+                                : AppColors.secondary),
+                        borderRadius: BorderRadius.circular(
+                          12,
+                        ),
                       ),
                       child: Text(
                         category,
                         style: TextStyle(
-                          color: isSelected ? Colors.white : AppColors.primary,
+                          color: isSelected
+                              ? Colors.white
+                              : (isDark ? Colors.white70 : AppColors.primary),
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -158,58 +240,101 @@ class _QuranPageState extends State<QuranPage> {
 
             const SizedBox(height: 20),
 
-            /// LIST SURAH
+            // ======================================================
+            // CONTENT
+            // ======================================================
 
             Expanded(
-              child: Builder(
-                builder: (_) {
-                  if (selectedCategory == "Surah") {
-                    return ListView.builder(
-                      itemCount: filteredSurah.length,
-                      itemBuilder: (context, index) {
-                        final surah = filteredSurah[index];
-
-                        return GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => DetailSurahPage(
-                                  noSurat: surah.nomor,
-                                ),
-                              ),
-                            );
-                          },
-                          child: SurahTile(
-                            surahName: surah.namaLatin,
-                            surahNumber: surah.nomor.toString(),
-                            totalAyah: "${surah.jumlahAyat} Ayat",
-                          ),
-                        );
-                      },
-                    );
-                  }
-
-                  /// JUZ
-                  if (selectedCategory == "Juz") {
-                    return JuzTab(
-                      allSurah: surahList,
-                    );
-                  }
-
-                  /// BOOKMARK
-                  return BookmarkTab(
-                    allSurah: surahList,
-                  );
-                },
-              ),
+              child: _buildCategoryContent(),
             ),
           ],
         ),
       ),
     );
   }
+
+  // ============================================================
+  // CATEGORY CONTENT
+  // ============================================================
+
+  Widget _buildCategoryContent() {
+    // ============================================================
+    // SURAH
+    // ============================================================
+
+    if (selectedCategory == 'Surah') {
+      return _buildSurahList();
+    }
+
+    // ============================================================
+    // JUZ
+    // ============================================================
+
+    if (selectedCategory == 'Juz') {
+      return JuzTab(
+        allSurah: surahList,
+      );
+    }
+
+    // ============================================================
+    // BOOKMARK
+    // ============================================================
+
+    return BookmarkTab(
+      allSurah: surahList,
+    );
+  }
+
+  // ============================================================
+  // SURAH LIST
+  // ============================================================
+
+  Widget _buildSurahList() {
+    if (filteredSurah.isEmpty) {
+      return const Center(
+        child: Text(
+          'Surah tidak ditemukan',
+          style: TextStyle(
+            color: AppColors.primary,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.only(
+        bottom: 24,
+      ),
+      itemCount: filteredSurah.length,
+      itemBuilder: (context, index) {
+        final surah = filteredSurah[index];
+
+        return GestureDetector(
+          onTap: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => DetailSurahPage(
+                  noSurat: surah.nomor,
+                ),
+              ),
+            );
+          },
+          child: SurahTile(
+            surahName: surah.namaLatin,
+            surahNumber: surah.nomor.toString(),
+            totalAyah: '${surah.jumlahAyat} Ayat',
+          ),
+        );
+      },
+    );
+  }
 }
+
+// ================================================================
+// SURAH TILE
+// ================================================================
 
 class SurahTile extends StatelessWidget {
   final String surahName;
@@ -225,20 +350,35 @@ class SurahTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(
+        bottom: 16,
+      ),
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
+        color: isDark ? const Color(0xff1E1E1E) : Colors.white,
         borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.2 : 0.03),
+            blurRadius: 12,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Row(
         children: [
+          // ======================================================
+          // NOMOR SURAH
+          // ======================================================
+
           Container(
             width: 45,
             height: 45,
             decoration: BoxDecoration(
-              color: AppColors.secondary,
+              color: isDark ? const Color(0xff2A2A2A) : AppColors.secondary,
               borderRadius: BorderRadius.circular(14),
             ),
             child: Center(
@@ -251,16 +391,23 @@ class SurahTile extends StatelessWidget {
               ),
             ),
           ),
+
           const SizedBox(width: 16),
+
+          // ======================================================
+          // NAMA SURAH
+          // ======================================================
+
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   surahName,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : Colors.black87,
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -273,98 +420,18 @@ class SurahTile extends StatelessWidget {
               ],
             ),
           ),
-          const Icon(
+
+          // ======================================================
+          // ARROW
+          // ======================================================
+
+          Icon(
             Icons.arrow_forward_ios_rounded,
             size: 18,
+            color: isDark ? Colors.white54 : Colors.grey,
           ),
         ],
       ),
-    );
-  }
-}
-
-class _BottomNavbar extends StatelessWidget {
-  final int currentIndex;
-
-  const _BottomNavbar({
-    required this.currentIndex,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return BottomNavigationBar(
-      currentIndex: currentIndex,
-      onTap: (index) {
-        switch (index) {
-          /// HOME
-          case 0:
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const HomePage(),
-              ),
-            );
-            break;
-
-          /// HABIT
-          case 1:
-            Navigator.pushReplacement(
-                context, MaterialPageRoute(builder: (_) => const HabitPage()));
-            break;
-
-          /// QURAN
-          case 2:
-            break;
-
-          /// DOA
-          case 3:
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const DoaPage(),
-              ),
-            );
-            break;
-
-          /// PROFILE
-          case 4:
-            Navigator.pushReplacement(context,
-                MaterialPageRoute(builder: (_) => const ProfilePage()));
-            break;
-        }
-      },
-      elevation: 0,
-      type: BottomNavigationBarType.fixed,
-      backgroundColor: AppColors.white,
-      selectedItemColor: AppColors.primary,
-      unselectedItemColor: AppColors.grey,
-      selectedIconTheme: const IconThemeData(
-        size: 28,
-      ),
-      showSelectedLabels: false,
-      showUnselectedLabels: false,
-      items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home_rounded),
-          label: '',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.calendar_month_outlined),
-          label: '',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.menu_book),
-          label: '',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.nightlight_round),
-          label: '',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.person_rounded),
-          label: '',
-        ),
-      ],
     );
   }
 }

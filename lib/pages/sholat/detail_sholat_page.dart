@@ -4,7 +4,7 @@ import 'package:ibadah_journey/core/constants/colors.dart';
 import 'package:ibadah_journey/pages/sholat/sholat_data.dart';
 
 class DetailSholatPage extends StatelessWidget {
-  final DoaModel doa;
+  final SholatModel doa;
 
   const DetailSholatPage({
     super.key,
@@ -13,26 +13,61 @@ class DetailSholatPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
+    // Memeriksa status Dark Mode aktif
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-      /// APPBAR (FIX JUDUL PANJANG)
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: AppColors.background,
-        iconTheme: const IconThemeData(color: AppColors.primary),
-        title: Text(
-          doa.judul,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: AppColors.primary,
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+
+      /// APPBAR (FIX JUDUL PANJANG & ADAPTIF TEMA)
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(62),
+        child: Container(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // TOMBOL BACK
+              Positioned(
+                left: 4,
+                top: 0,
+                bottom: 0,
+                child: IconButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  icon: const Icon(
+                    Icons.arrow_back,
+                    color: AppColors.primary,
+                    size: 24,
+                  ),
+                ),
+              ),
+
+              // JUDUL BENAR-BENAR DI TENGAH LAYAR
+              Positioned(
+                left: 45,
+                right: 45,
+                top: 4,
+                bottom: 4,
+                child: Center(
+                  child: Text(
+                    doa.judul,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 16,
+                      height: 1.35,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white : AppColors.black,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
-        centerTitle: true,
       ),
 
       body: SingleChildScrollView(
@@ -41,11 +76,11 @@ class DetailSholatPage extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.all(22),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDark ? const Color(0xff1E1E1E) : Colors.white,
             borderRadius: BorderRadius.circular(28),
             boxShadow: [
               BoxShadow(
-                color: Colors.green.withOpacity(0.06),
+                color: Colors.black.withOpacity(isDark ? 0.2 : 0.03),
                 blurRadius: 18,
                 offset: const Offset(0, 6),
               ),
@@ -60,7 +95,9 @@ class DetailSholatPage extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: AppColors.secondary,
+                      color: isDark
+                          ? const Color(0xff2A2A2A)
+                          : AppColors.secondary,
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: const Icon(
@@ -74,10 +111,10 @@ class DetailSholatPage extends StatelessWidget {
                       doa.judul,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
-                        color: Colors.black87,
+                        color: isDark ? Colors.white : Colors.black87,
                       ),
                     ),
                   ),
@@ -86,12 +123,13 @@ class DetailSholatPage extends StatelessWidget {
 
               const SizedBox(height: 26),
 
-              /// ARAB (LEBIH PREMIUM)
+              /// ARAB (KARTU ARAB ADAPTIF)
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(22),
                 decoration: BoxDecoration(
-                  color: AppColors.background,
+                  color:
+                      isDark ? const Color(0xff2A2A2A) : AppColors.background,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Directionality(
@@ -100,10 +138,12 @@ class DetailSholatPage extends StatelessWidget {
                     doa.arab,
                     textAlign: TextAlign.right,
                     style: GoogleFonts.notoNaskhArabic(
-                      fontSize: 30,
+                      fontSize: 23,
                       height: 2.2,
                       fontWeight: FontWeight.w500,
-                      color: Color(0xff5B4B4B),
+                      color: isDark
+                          ? const Color(0xffE2D8D8)
+                          : const Color(0xff5B4B4B),
                     ),
                   ),
                 ),
@@ -123,11 +163,13 @@ class DetailSholatPage extends StatelessWidget {
 
               const SizedBox(height: 10),
 
+              /// KARTU ARTI ADAPTIF
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
-                  color: AppColors.background,
+                  color:
+                      isDark ? const Color(0xff2A2A2A) : AppColors.background,
                   borderRadius: BorderRadius.circular(18),
                 ),
                 child: Text(
@@ -135,7 +177,7 @@ class DetailSholatPage extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xff9A8F8F),
+                    color: isDark ? Colors.white70 : const Color(0xff7E8D85),
                     height: 1.7,
                   ),
                 ),

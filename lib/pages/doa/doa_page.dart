@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ibadah_journey/core/constants/colors.dart';
 import 'package:ibadah_journey/pages/doa/detail_doa_page.dart';
-import 'package:ibadah_journey/pages/habit/habit_page.dart';
-import 'package:ibadah_journey/pages/home/home_page.dart';
-import 'package:ibadah_journey/pages/profile/profile_page.dart';
-import 'package:ibadah_journey/pages/quran/quran_page.dart';
+import 'package:ibadah_journey/pages/navigation/custom_bottom_navbar.dart';
 import 'doa_data.dart';
 
 class DoaPage extends StatefulWidget {
@@ -76,114 +73,191 @@ class _DoaPageState extends State<DoaPage> {
     });
   }
 
+  // ============================================================
+  // BUILD
+  // ============================================================
+
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      bottomNavigationBar: const _BottomNavbar(
-        currentIndex: 3,
-      ),
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      bottomNavigationBar: const CustomBottomNavbar(currentIndex: 3),
+
+      // ========================================================
+      // APP BAR
+      // ========================================================
+
       appBar: AppBar(
-        title: const Text(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        elevation: 0,
+        centerTitle: true,
+        title: Text(
           "Doa Harian",
           style: TextStyle(
-            color: AppColors.black,
-            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : AppColors.black,
             fontSize: 20,
+            fontWeight: FontWeight.bold,
           ),
         ),
-        centerTitle: true,
+        iconTheme: const IconThemeData(
+          color: AppColors.primary,
+        ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            /// SEARCH
-            TextField(
-              onChanged: searchDoa,
-              decoration: InputDecoration(
-                hintText: "Cari doa & dzikir harian...",
-                prefixIcon: UnconstrainedBox(
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 16, right: 8),
-                    child: Image.asset(
-                      'assets/images/search.png',
+
+      // ========================================================
+      // BODY
+      // ========================================================
+
+      body: Column(
+        children: [
+          // ======================================================
+          // SEARCH & CATEGORY
+          // ======================================================
+
+          Padding(
+            padding: const EdgeInsets.only(
+              left: 24,
+              right: 24,
+              top: 20,
+            ),
+            child: Column(
+              children: [
+                // ==================================================
+                // SEARCH
+                // ==================================================
+
+                TextField(
+                  onChanged: searchDoa,
+                  style: TextStyle(
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: "Cari doa...",
+                    hintStyle: TextStyle(
+                      color: isDark ? Colors.white54 : AppColors.grey,
+                    ),
+                    prefixIcon: const Icon(
+                      Icons.search,
                       color: AppColors.primary,
-                      width: 18, // Atur ukuran ikon di sini
-                      height: 18,
+                    ),
+                    filled: true,
+                    fillColor: isDark ? const Color(0xff1E1E1E) : Colors.white,
+                    contentPadding: const EdgeInsets.symmetric(
+                      vertical: 18,
+                      horizontal: 14,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(18),
+                      borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(18),
+                      borderSide: const BorderSide(
+                        color: AppColors.primary,
+                        width: 1.5,
+                      ),
                     ),
                   ),
                 ),
-                filled: true,
-                fillColor: Theme.of(context).cardColor,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(18),
-                  borderSide: BorderSide.none,
+
+                const SizedBox(
+                  height: 16,
                 ),
-              ),
-            ),
 
-            const SizedBox(height: 16),
+                // ==================================================
+                // CATEGORY
+                // ==================================================
 
-            /// CATEGORY
-            SizedBox(
-              height: 40,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: categories.length,
-                itemBuilder: (context, index) {
-                  final cat = categories[index];
-                  final isActive = selectedCategory == cat;
+                SizedBox(
+                  height: 40,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: categories.length,
+                    itemBuilder: (context, index) {
+                      final cat = categories[index];
 
-                  return GestureDetector(
-                    onTap: () => filterByCategory(cat),
-                    child: Container(
-                      margin: const EdgeInsets.only(right: 10),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color:
-                            isActive ? AppColors.primary : AppColors.secondary,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        cat,
-                        style: TextStyle(
-                          color: isActive ? Colors.white : AppColors.primary,
-                          fontWeight: FontWeight.w600,
+                      final isActive = selectedCategory == cat;
+
+                      return GestureDetector(
+                        onTap: () => filterByCategory(
+                          cat,
                         ),
-                      ),
-                    ),
-                  );
-                },
-              ),
+                        child: Container(
+                          margin: const EdgeInsets.only(
+                            right: 10,
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isActive
+                                ? AppColors.primary
+                                : (isDark
+                                    ? const Color(0xff2A2A2A)
+                                    : AppColors.secondary),
+                            borderRadius: BorderRadius.circular(
+                              12,
+                            ),
+                          ),
+                          child: Text(
+                            cat,
+                            style: TextStyle(
+                              color: isActive
+                                  ? Colors.white
+                                  : (isDark
+                                      ? Colors.white70
+                                      : AppColors.primary),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
+          ),
 
-            const SizedBox(height: 20),
+          const SizedBox(
+            height: 20,
+          ),
 
-            /// LIST DOA
-            Expanded(
-              child: ListView.builder(
-                itemCount: filteredDoa.length,
-                itemBuilder: (context, index) {
-                  final doa = filteredDoa[index];
+          // ======================================================
+          // LIST DOA
+          // ======================================================
 
-                  return DoaTile(
-                    number: "${index + 1}",
-                    title: doa.judul,
-                    doa: doa,
-                  );
-                },
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.only(
+                left: 24,
+                right: 24,
+                bottom: 24,
               ),
+              itemCount: filteredDoa.length,
+              itemBuilder: (context, index) {
+                final doa = filteredDoa[index];
+
+                return DoaTile(
+                  number: "${index + 1}",
+                  title: doa.judul,
+                  doa: doa,
+                );
+              },
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
+
+// ================================================================
+// DOA TILE
+// ================================================================
 
 class DoaTile extends StatelessWidget {
   final String number;
@@ -199,30 +273,49 @@ class DoaTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => DetailPage(doa: doa),
+            builder: (_) => DetailDoaPage(
+              doa: doa,
+            ),
           ),
         );
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
+        margin: const EdgeInsets.only(
+          bottom: 16,
+        ),
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
+          color: isDark ? const Color(0xff1E1E1E) : Colors.white,
           borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(isDark ? 0.2 : 0.03),
+              blurRadius: 12,
+              offset: const Offset(0, 8),
+            ),
+          ],
         ),
         child: Row(
           children: [
+            // ====================================================
+            // NOMOR
+            // ====================================================
+
             Container(
               width: 45,
               height: 45,
               decoration: BoxDecoration(
-                color: AppColors.secondary,
-                borderRadius: BorderRadius.circular(14),
+                color: isDark ? const Color(0xff2A2A2A) : AppColors.secondary,
+                borderRadius: BorderRadius.circular(
+                  14,
+                ),
               ),
               child: Center(
                 child: Text(
@@ -234,109 +327,38 @@ class DoaTile extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(width: 16),
+
+            const SizedBox(
+              width: 16,
+            ),
+
+            // ====================================================
+            // JUDUL
+            // ====================================================
+
             Expanded(
               child: Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
+                  color: isDark ? Colors.white : Colors.black87,
                 ),
               ),
             ),
+
+            // ====================================================
+            // ARROW
+            // ====================================================
+
             const Icon(
               Icons.arrow_forward_ios_rounded,
               size: 18,
+              color: AppColors.primary,
             ),
           ],
         ),
       ),
-    );
-  }
-}
-
-class _BottomNavbar extends StatelessWidget {
-  final int currentIndex;
-
-  const _BottomNavbar({
-    required this.currentIndex,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return BottomNavigationBar(
-      currentIndex: currentIndex,
-      onTap: (index) {
-        switch (index) {
-          /// HOME
-          case 0:
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const HomePage(),
-              ),
-            );
-            break;
-
-          /// HABIT
-          case 1:
-            Navigator.pushReplacement(
-                context, MaterialPageRoute(builder: (_) => const HabitPage()));
-            break;
-
-          /// QURAN
-          case 2:
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const QuranPage(),
-              ),
-            );
-            break;
-
-          /// DOA
-          case 3:
-            break;
-
-          /// PROFILE
-          case 4:
-            Navigator.pushReplacement(context,
-                MaterialPageRoute(builder: (_) => const ProfilePage()));
-            break;
-        }
-      },
-      elevation: 0,
-      type: BottomNavigationBarType.fixed,
-      backgroundColor: AppColors.white,
-      selectedItemColor: AppColors.primary,
-      unselectedItemColor: AppColors.grey,
-      selectedIconTheme: const IconThemeData(
-        size: 28,
-      ),
-      showSelectedLabels: false,
-      showUnselectedLabels: false,
-      items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home_rounded),
-          label: '',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.calendar_month_outlined),
-          label: '',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.menu_book),
-          label: '',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.nightlight_round),
-          label: '',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.person_rounded),
-          label: '',
-        ),
-      ],
     );
   }
 }
