@@ -82,8 +82,8 @@ class CustomBottomNavbar extends StatelessWidget {
           // 🌟 Memperbaiki path gambar dan menambahkan efek warna dinamis (aktif/tidak aktif)
           icon: ImageIcon(
             const AssetImage(
-                'assets/images/prayer.png'), // Sesuaikan path foldernya jika ada di 'assets/icons/prayer.png'
-            size: 42.8,
+                'assets/icons/sholat.png'), // Sesuaikan path foldernya jika ada di 'assets/icons/prayer.png'
+            size: 29.2,
 
             color: currentIndex == 2
                 ? AppColors.primary
