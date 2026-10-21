@@ -210,7 +210,7 @@ class _DoaPageState extends State<DoaPage> {
                                   : (isDark
                                       ? Colors.white70
                                       : AppColors.primary),
-                              fontWeight: FontWeight.w500,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                         ),
